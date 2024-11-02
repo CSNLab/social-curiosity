@@ -5,14 +5,12 @@ jQuery(document).ready(function() {
     $('.page').hide();
     $('#end').hide();
     $('.invalid').hide();
-    $('#btn-prev').hide();
-    $('#no-prev').hide();
-    var page_i = 0;
+    var page_i = 1;
     var question_i = 0;
     window.page_i = page_i;
     window.question_i = question_i;
     var roster_data = {};
-    var all_names = {in_dorm: new Set(), outside: new Set([])};
+    var all_names = {in_dorm: new Set()};
     var skip_check = false;
 
     // prevent closing window
@@ -42,16 +40,17 @@ jQuery(document).ready(function() {
     // PROGRESS BAR
     var prog_bar = new ProgressBar.Line('#prog-bar', { color: '#ffc107' });
 
-    function push_names(names_in_dorm, names_outside) {
+    function push_names(names_in_dorm) {
         all_names.in_dorm = new Set([...names_in_dorm, ...all_names.in_dorm]);
-        all_names.outside = new Set([...names_outside, ...all_names.outside])
     }
 
     function load_progress(user_data) {
         let prog = user_data.progress.split('.');
         page_i = parseInt(prog[0]);
         question_i = parseInt(prog[1]);
-        skip_check = true;
+        if (page_i != ROSTER_PAGE) {
+            skip_check = true;
+        }
         console.log('Loading', page_i, question_i);
         if (page_i == ROSTER_PAGE && question_i > 0) {
             question_i -= 1;  // show the last answered roster question in case it hasn't been fully answered
@@ -68,14 +67,17 @@ jQuery(document).ready(function() {
                         console.log(key, user_data[t][key]);
                         roster_data[i] = {
                             names_in_dorm: user_data[t][key]['names_in_dorm'],
-                            names_outside: user_data[t][key]['names_outside']
+                            // names_outside: user_data[t][key]['names_outside']
                         };
                     }
                 }
             }
             for (let q_i in roster_data) {
-                push_names(roster_data[q_i]['names_in_dorm'], roster_data[q_i]['names_outside']);
+                push_names(roster_data[q_i]['names_in_dorm']);
             }
+        }
+        if (page_i == 4) {
+            $('#btn-next').removeClass('disabled');
         }
         $('#btn-next').click();
         $('#p' + page_i).show();
@@ -127,7 +129,7 @@ jQuery(document).ready(function() {
         }
         return false;
     }
-    function check_duplicate_against_exist_names(name, types=['in_dorm', 'outside'], allow_repeat=false) {
+    function check_duplicate_against_exist_names(name, types=['in_dorm'], allow_repeat=false) {
         for (let type of types) {
             for (let n of all_names[type]) {
                 if (allow_repeat && name == n) {
@@ -143,7 +145,7 @@ jQuery(document).ready(function() {
     // validator
     function validate_name(tag) {
         let valid = true;
-        let fields = ['#dorm-names', '#outsider-names'];
+        let fields = ['#dorm-names'];
         for (let i in fields) {
             let field = $(fields[i]);
             if (tag == name_to_title_case(field.val())) {
@@ -155,13 +157,10 @@ jQuery(document).ready(function() {
                 }
                 // test if repeating names on the same page
                 let repeat_this_field = field.tagsManager('tags').indexOf(tag);
-                let repeat_other_field = $(fields[1 - i]).tagsManager('tags').indexOf(tag);
                 let blink = false;
                 let rep = false;
                 if (repeat_this_field > -1) {
                     blink = $(fields[i] + '-container' + ' .tm-tag')[repeat_this_field];
-                } else if (repeat_other_field > -1) {
-                    blink = $(fields[1 - i] + '-container' + ' .tm-tag')[repeat_other_field];
                 } else {
                     // test for similar names on the same page
                     rep = check_duplicate_against_list(tag, field.tagsManager('tags'));
@@ -185,18 +184,12 @@ jQuery(document).ready(function() {
                         .animate({ backgroundColor: '#ffc107' }, 100);
                 }
                 // test if repeating saved names
-                let msg_where = '';
                 if (!rep) {
-                    rep = check_duplicate_against_exist_names(tag, [['in_dorm', 'outside'][i]], true);   // forbid similar names in the same field
-                    msg_where = rep ? ['in', 'outside'][i] : '';
-                }
-                if (!rep) {
-                    rep = check_duplicate_against_exist_names(tag, [['in_dorm', 'outside'][1 - i]], false);  // forbid repeating or similar names in the other
-                    msg_where = rep ? ['in', 'outside'][1 - i] : '';
+                    rep = check_duplicate_against_exist_names(tag, ['in_dorm'], true);   // forbid similar names in the same field
                 }
                 if (rep) {
-                    field.get(0).setCustomValidity('You have already entered this name or a similar name (' + rep + ') ' + msg_where +
-                        ' your wing of Hedrick. If you are entering different people with the same name, please use a *distinct* descriptive term (e.g., Daniel Kim artist).');
+                    field.get(0).setCustomValidity('You have already entered this name or a similar name (' + rep + '). ' +
+                        'If you are entering different people with the same name, please use a *distinct* descriptive term (e.g., Daniel Kim artist).');
                     field.get(0).reportValidity();
                     valid = false;
                 }
@@ -224,46 +217,24 @@ jQuery(document).ready(function() {
         tagCloseIcon: '×',
         validator: validate_name
     });
-    $('#outsider-names').tagsManager({
-        deleteTagsOnBackspace: false,
-        CapitalizeFirstLetter: true,
-        tagsContainer: '#outsider-names-container',
-        blinkBGColor_1: '#d90000',
-        blinkBGColor_2: '#ffc107',
-        // typeahead: true,
-        // typeaheadSource: name_typeahead_source,
-        tagCloseIcon: '×',
-        validator: validate_name
-    });
 
-    // "add" buttons
+    // "add" button
     $('#btn-dorm-add').on('click', () => {
         let name = $('#dorm-names').val();
         $('#dorm-names').tagsManager('pushTag', name);
-    });
-    $('#btn-outsider-add').on('click', () => {
-        let name = $('#outsider-names').val();
-        $('#outsider-names').tagsManager('pushTag', name);
     });
 
     $('#dorm-names').on('tm:pushed',(e, tag) => {
         all_names.in_dorm.add(tag);
     });
-    $('#outsider-names').on('tm:pushed',(e, tag) => {
-        all_names.outside.add(tag);
-    });
     $('#dorm-names').on('tm:spliced',(e, tag) => {
         all_names.in_dorm.delete(tag);
-    });
-    $('#outsider-names').on('tm:spliced',(e, tag) => {
-        all_names.outside.delete(tag);
     });
 
     // enable/disable next button
     function tag_onchange(e, tag) {
         let dorm_names = $('#dorm-names').tagsManager('tags');
-        let outsider_names = $('#outsider-names').tagsManager('tags');
-        if (dorm_names.length + outsider_names.length == 0) {
+        if (dorm_names.length == 0) {
             $('#btn-next').addClass('disabled');
         } else {
             $('#btn-next').removeClass('disabled');
@@ -278,7 +249,7 @@ jQuery(document).ready(function() {
 
     // check if entered text but didn't add
     function check_entered_text() {
-        for (let field of ['#dorm-names', '#outsider-names']) {
+        for (let field of ['#dorm-names']) {
             if ($(field).val().length > 0) {
                 $(field).get(0).setCustomValidity('You entered a name but did\'t add it. Please either add or remove it.');
                 $(field).get(0).reportValidity();
@@ -310,23 +281,18 @@ jQuery(document).ready(function() {
             return false;
         }
         let dorm_names = list_to_title_case($('#dorm-names').tagsManager('tags'));
-        let outsider_names = list_to_title_case($('#outsider-names').tagsManager('tags'));
         $('#dorm-names').val('');
-        $('#outsider-names').val('');
-        // name_typeahead_source.push(...dorm_names, ...outsider_names);
 
         // save to firebase
         roster_data[question_i] = {
             question: $('#p' + ROSTER_PAGE + ' .question-text').get(0).textContent,
             names_in_dorm: Object.assign([], dorm_names),
-            names_outside: Object.assign([], outsider_names),
             timestamp: Date.now()
         };
         window.save2firebase(roster_data[question_i], page_i, question_i);
 
         // next question
         $('#dorm-names').tagsManager('empty');
-        $('#outsider-names').tagsManager('empty');
         return true;
     }
 
@@ -433,7 +399,7 @@ jQuery(document).ready(function() {
     }
 
     function tie_strength_prepare(index) {
-        let tie_names = [...all_names['in_dorm'], ...all_names['outside']];
+        let tie_names = [...all_names['in_dorm']];
         shuffle(tie_names);
         // append questions to DOM
         let orient = ($('body').width() < 800) ? 'vertical' : 'horizontal';
@@ -554,6 +520,7 @@ jQuery(document).ready(function() {
         if (! $('#demographic').get(0).reportValidity()) {
             return false;
         }
+        $('body').hide();
 
         let data = {
             age: $('#age').val(),
@@ -568,86 +535,25 @@ jQuery(document).ready(function() {
             timestamp: Date.now()
         }
 
-        window.save2firebase(data, page_i, question_i);
+        window.save2firebase(data, page_i, question_i, true, true);
 
         return true;
     }
 
-
-    // PAYMENT QUESTION
-
-    function pay_form_onchange() {
-        if ($('input[type=radio][name=lumpsum]').is(':checked') &&
-                $('input[type=radio][name=payment]').is(':checked') &&
-                $('input[type=radio][name=fmri]').is(':checked')) {
-            $('#btn-next').removeClass('disabled');
-        }
-    }
-
-    $('input[type=radio][name=lumpsum]').change(pay_form_onchange);
-    $('input[type=radio][name=payment]').change(pay_form_onchange);
-    $('input[type=radio][name=fmri]').change(pay_form_onchange);
-
-    function payment_onfinish() {
-        for (let form of ['#lumpsum-form', '#payment-form', '#fmri-form']) {
-            console.log(form);
-            if (! $(form).get(0).reportValidity()) {
-                return false;
-            }
-        }
-        window.save2firebase({
-            lumpsum: $('input[name=lumpsum]:checked').val(),
-            payment: $('input[name=payment]:checked').val(),
-            fmri: $('input[name=fmri]:checked').val()
-        }, page_i, question_i, true, true);
-        return true;
-    }
 
     // PREVIOUS BUTTON
     var onfinish_funcs = [nickname_onfinish, roster_onfinish, tie_strength_onfinish,
-                          likert_onfinish, demographic_onfinish, payment_onfinish];
+                          likert_onfinish, demographic_onfinish];
 
     function add_data() {
         // show previous data
         roster_data[question_i].names_in_dorm.forEach(
             (tag) => $('#dorm-names').tagsManager('pushTag', tag)
         );
-        roster_data[question_i].names_outside.forEach(
-            (tag) => $('#outsider-names').tagsManager('pushTag', tag)
-        );
-        if (roster_data[question_i].names_in_dorm.length + roster_data[question_i].names_outside.length == 0) {
+        if (roster_data[question_i].names_in_dorm.length == 0) {
             $('#btn-next').addClass('disabled');
         }
     }
-
-    $('#btn-prev').on('click', (e) => {
-        if ($('#btn-prev').hasClass('disabled')) {
-            return;
-        }
-
-        // save current data
-        let result = onfinish_funcs[page_i](question_i);
-        if (!result) {
-            return;
-        }
-
-        // go back to previous question
-        --question_i;
-        $('.question-text').html(question_texts[page_i][question_i]);
-        add_data();
-
-        prog_bar.animate(Math.max(0.0, prog_bar.value() - 0.3 / question_texts[page_i].length),
-                        { duration: 1000 });
-
-        // first question
-        if (page_i == ROSTER_PAGE && question_i < 1) {
-            // remove prev button
-            $('#btn-prev').hide();
-        }
-        $('.invalid').hide();
-        normal_next_btn();
-        $('#no-prev').hide();
-    });
 
     // NEXT BUTTON
 
@@ -717,22 +623,22 @@ jQuery(document).ready(function() {
                             { duration: 1000 });
         } else {
             // next page, first question
-            $('#btn-next').addClass('disabled');
+            if (page_i != 4) {
+                $('#btn-next').addClass('disabled');
+            }
             $('#p' + page_i).empty();
             // prepare subsequent questions
             if (page_i == ROSTER_PAGE) {
-                // remove prev button
-                $('#btn-prev').hide();
                 $('#no-prev').hide();
             }
 
             // next page
             ++page_i;
             question_i = 0;
-            if (page_i == $('.page').length) {
+            if (page_i > $('.page').length) {
                 return;  // DONE
             }
-            if (page_i == 2 && all_names.in_dorm.size == 0 && all_names.outside.size == 0) {
+            if (page_i == 2 && all_names.in_dorm.size == 0) {
                 page_i = 3;
             }
 
@@ -764,12 +670,8 @@ jQuery(document).ready(function() {
         // hide warning
         $('.invalid').hide();
         normal_next_btn();
-        // show previous button
-        if (page_i == ROSTER_PAGE && question_i > 0) {
-            $('#btn-prev').show();
-        }
         // last page last question, change button text
-        if ((page_i == $('.page').length - 1) && (question_i == question_texts[page_i].length - 1)) {
+        if ((page_i == $('.page').length) && (question_i == question_texts[page_i].length - 1)) {
             $('#btn-next').text('Finish');
         }
     });
