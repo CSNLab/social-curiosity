@@ -50,7 +50,6 @@
         $('#info-form').hide();
         $('#confirmation').hide();
         $('#correct-info').hide();
-        window.location.replace('survey.html?' + url);
     });
 
     timestamp = new Date();

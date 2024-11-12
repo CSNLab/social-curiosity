@@ -12,6 +12,7 @@ jQuery(document).ready(function() {
     var roster_data = {};
     var all_names = {in_dorm: new Set()};
     var skip_check = false;
+    const ROSTER_PAGE = 1;
 
     // prevent closing window
     window.onbeforeunload = function() {
@@ -86,34 +87,9 @@ jQuery(document).ready(function() {
     window.get_user_progress(load_progress);
 
 
-    // ----- NICKNAME -----
-
-    $('input[name=movein]:radio').change(() => {
-        if ($('#other-movein-check').is(':checked')) {
-            $('#other-movein').attr('required', true);
-        } else {
-            $('#other-movein').attr('required', false);
-        }
-    });
-
-    function nickname_onfinish() {
-        if (! $('#nickname').get(0).reportValidity()) {
-            return false;
-        }
-
-        window.save2firebase({
-            other_name: $('#other-name').val(),
-            movein_time: $('input[name=movein]:checked').val(),
-            other_movein_time: $('#other-movein').val(),
-            ra: $('input[name=ra]:checked').val(),
-            timestamp: Date.now()
-        }, page_i, question_i);
-
-        return true;
-    }
-
-
     // ----- ROSTER QUESTIONS -----
+    $('.question-text').html(question_texts[page_i][question_i]);
+
     function check_duplicate(name1, name2) {
         let dist = window.levenshtein(name1, name2);
         if ((dist <= 1) || (dist / name1.length < 0.18)) {
@@ -542,7 +518,7 @@ jQuery(document).ready(function() {
 
 
     // PREVIOUS BUTTON
-    var onfinish_funcs = [nickname_onfinish, roster_onfinish, tie_strength_onfinish,
+    var onfinish_funcs = [function(){}, roster_onfinish, tie_strength_onfinish,
                           likert_onfinish, demographic_onfinish];
 
     function add_data() {

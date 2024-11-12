@@ -33,7 +33,7 @@
 
                 <br>
                 <div class="blue warning">Please complete this survey alone in a quiet, distraction-free environment.</div>
-                <div class="blue warning">This survey will take about 20-30 minutes. Please allocate sufficient time.</div>
+                <div class="blue warning">This survey will take about 10-15 minutes. Please allocate sufficient time.</div>
 
                 <button id="submit" type="submit" class="btn btn-primary central-btn">Submit</button>
                 <p id="confidential">All responses to this survey will be kept confidential. Only the principal investigators and their immediate staff who have been approved by the Institutional Review Board (IRB) at UCLA will have access to your responses. The data you provide will be stored with unique identification codes not related to your identity. If information from this study is published or presented at scientific meetings, your personal information will not be used.</p>
@@ -43,14 +43,14 @@
         <div id="confirmation" class="central">
             <p>Please double check your information:</p>
             <div id="info-check"></div>
-            <p class="blue">Make sure everything is correct. We will need these to pay you and everyone else after you complete the survey.</p>
+            <p class="blue">Make sure everything is correct.</p>
             <button id="refresh-btn" class="btn btn-warning">Something is wrong, go back</button>
             <button id="confirm-btn" class="btn btn-info">This is correct</button>
         </div>
 
         <!-- Firebase -->
         <script type="module">
-            var DB_NAME = 'test_data';    // 'test_' or 'prod_'
+            var DB_NAME = 'test_data';    // TODO 'test_data' or 'prod_data'
 
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
             import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js';
@@ -114,6 +114,7 @@
                         [timestamp]: data,
                         resume_url: window.location.href.replace('login', 'survey').split('?')[0] + '?' + url
                     }, { merge: true });
+                    window.location.replace('survey.html?' + url);
                 } catch (e) {
                     alert('Failed to save your data. Please check your internet connection and try again.\n' +
                         'If this message shows up multiple times, please contact the experimenters.\n' + e);
