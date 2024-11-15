@@ -1,8 +1,8 @@
 'use strict';
 window.hookWindow = false;
+$('.page').hide();
 
 jQuery(document).ready(function() {
-    $('.page').hide();
     $('#end').hide();
     $('.invalid').hide();
     var page_i = 1;

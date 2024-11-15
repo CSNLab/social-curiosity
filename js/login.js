@@ -40,16 +40,16 @@
         let ts = timestamp.valueOf().toString();
         url = 'user=' + subid + '&timestamp=' + ts + '&l=4';
 
+        $('#info-form').hide();
+        $('#confirmation').hide();
+        $('#correct-info').hide();
+
         window.save_user2firebase(subid, ts, url.replace(ts, '0000000000000'), {
             subid: subid,
             email: email,
             phone: phone,
             login_start_time: timestamp.toString()
         });
-
-        $('#info-form').hide();
-        $('#confirmation').hide();
-        $('#correct-info').hide();
     });
 
     timestamp = new Date();
