@@ -17,32 +17,8 @@
         <div id="info-form" class="central" data-toggle="validator" role="form">
             <form action="javascript:submit_info();" class="form-horizontal">
                 <div id="name-group" class="form-group input-group">
-                    <div class="input-group-prepend"><span class="input-group-text">Your name</span></div>
-                    <input id="firstname" type="text" class="form-control" placeholder="First" required>
-                    <input id="lastname" type="text" class="form-control" placeholder="Last" required>
-                </div>
-
-                <div id="dorm-wing-group" class="form-group input-group">
-                    <label id="dorm-wing-label" class="input-group-text">Which wing is your room in?</label>
-                    <div class="custom-control custom-radio custom-control-inline">
-                        <input type="radio" id="dorm-wing-n" name="dorm-wing" class="custom-control-input" value="north" required>
-                        <label class="custom-control-label" for="dorm-wing-n">North</label>
-                    </div>
-                    <div class="custom-control custom-radio custom-control-inline">
-                        <input type="radio" id="dorm-wing-s" name="dorm-wing" class="custom-control-input" value="south">
-                        <label class="custom-control-label" for="dorm-wing-s">South</label>
-                    </div>
-                </div>
-
-                <div id="dorm-group" class="form-group input-group">
-                    <div class="input-group-prepend"><span class="input-group-text">Your dorm room</span></div>
-                    <input id="dorm" class="form-control" placeholder="Room #" required>
-                    <div class="invalid-feedback">Please make sure your room number and wing are correct.</div>
-                </div>
-
-                <div id="uid-group" class="form-group input-group">
-                    <div class="input-group-prepend"><span id="dorm-label" class="input-group-text" id="inputGroup-sizing-default">Your UID</span></div>
-                    <input id="uid" class="form-control" placeholder="9 digit # on your BruinCard" required>
+                    <div class="input-group-prepend"><span class="input-group-text">Subject ID</span></div>
+                    <input id="subid" type="text" class="form-control" placeholder="Enter" required>
                 </div>
 
                 <div id="email-group" class="form-group input-group">
@@ -55,10 +31,9 @@
                     <input id="phone" class="form-control" placeholder="Please enter digits only" type="number" required>
                 </div>
 
-                <div class="blue warning">Make sure your <strong>UID</strong> and <strong>email</strong> are entered correctly! We will use them to pay you after you complete the survey.</div>
                 <br>
                 <div class="blue warning">Please complete this survey alone in a quiet, distraction-free environment.</div>
-                <div class="blue warning">This survey will take about 20-30 minutes. Please allocate sufficient time.</div>
+                <div class="blue warning">This survey will take about 10-15 minutes. Please allocate sufficient time.</div>
 
                 <button id="submit" type="submit" class="btn btn-primary central-btn">Submit</button>
                 <p id="confidential">All responses to this survey will be kept confidential. Only the principal investigators and their immediate staff who have been approved by the Institutional Review Board (IRB) at UCLA will have access to your responses. The data you provide will be stored with unique identification codes not related to your identity. If information from this study is published or presented at scientific meetings, your personal information will not be used.</p>
@@ -68,37 +43,27 @@
         <div id="confirmation" class="central">
             <p>Please double check your information:</p>
             <div id="info-check"></div>
-            <p class="blue">Make sure everything is correct. We will need these to pay you and everyone else after you complete the survey.</p>
+            <p class="blue">Make sure everything is correct.</p>
             <button id="refresh-btn" class="btn btn-warning">Something is wrong, go back</button>
             <button id="confirm-btn" class="btn btn-info">This is correct</button>
         </div>
 
-        <div id="instr" class="central">
-            <p>Please read the consent form below.</p>
-            <div id="frame-wrapper"><iframe id="consent-frame" src="consent.html"></iframe></div>
-            <div id="agreement" class="custom-control custom-checkbox">
-                <input type="checkbox" class="custom-control-input" id="agree-check">
-                <label class="custom-control-label" for="agree-check">I have read the above information about this research study and agree to participate</label>
-            </div>
-            <button id="start" class="btn btn-primary central-btn disabled">Start</button>
-        </div>
-
         <!-- Firebase -->
         <script type="module">
-            var DB_NAME = 'test_data';    // 'test_' or 'prod_'
+            var DB_NAME = 'prod_data';    // TODO 'test_data' or 'prod_data'
 
             import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
             import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.7.2/firebase-auth.js';
             import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore.js';
 
             const firebaseConfig = {
-                apiKey: "AIzaSyAmOb9FOQh-gSwgNknNBIU9kCbtMDlFyEM",
-                authDomain: "dorm---questionnaire.firebaseapp.com",
-                projectId: "dorm---questionnaire",
-                storageBucket: "dorm---questionnaire.appspot.com",
-                messagingSenderId: "7204112419",
-                appId: "1:7204112419:web:ebe91abba04302ee490996",
-                measurementId: "G-X1SQS73M77"
+                apiKey: "AIzaSyCb-F0lf6rmEEC40AUxeAElxnM-tFQrAdY",
+                authDomain: "curiosity-44e98.firebaseapp.com",
+                projectId: "curiosity-44e98",
+                storageBucket: "curiosity-44e98.firebasestorage.app",
+                messagingSenderId: "678723121819",
+                appId: "1:678723121819:web:7128cdb63610471cf80c3e",
+                measurementId: "G-PLESLCV1C7"
             };
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
@@ -149,6 +114,7 @@
                         [timestamp]: data,
                         resume_url: window.location.href.replace('login', 'survey').split('?')[0] + '?' + url
                     }, { merge: true });
+                    window.location.replace('survey.html?' + url);
                 } catch (e) {
                     alert('Failed to save your data. Please check your internet connection and try again.\n' +
                         'If this message shows up multiple times, please contact the experimenters.\n' + e);
